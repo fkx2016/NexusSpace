@@ -7,9 +7,225 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: #ffffff;
-  color: #333;
+  background: #0a0a0f;
+  color: #e8e8e8;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #0a0a0f 0%, #16213e 100%);
+}
+
+/* Error Container */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-10px);
+  }
+
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+.error-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #e74c3c;
+  margin: 0 0 16px 0;
+}
+
+.error-message {
+  font-size: 16px;
+  color: #a0a0a0;
+  margin: 0 0 32px 0;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.retry-button {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.retry-button:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+  transform: translateY(-2px);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+/* Welcome Container */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px;
+  text-align: center;
+}
+
+.welcome-icon {
+  font-size: 100px;
+  margin-bottom: 24px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.welcome-title {
+  font-size: 48px;
+  font-weight: 700;
+  color: #4a90e2;
+  margin: 0 0 12px 0;
+  text-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+.welcome-subtitle {
+  font-size: 20px;
+  color: #a0a0a0;
+  margin: 0 0 32px 0;
+  font-weight: 400;
+}
+
+.welcome-description {
+  font-size: 16px;
+  color: #c0c0c0;
+  max-width: 600px;
+  line-height: 1.8;
+  margin: 0 0 48px 0;
+}
+
+.welcome-description strong {
+  color: #4a90e2;
+  font-weight: 600;
+}
+
+.welcome-features {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: rgba(74, 144, 226, 0.05);
+  border: 1px solid rgba(74, 144, 226, 0.2);
+  border-radius: 12px;
+  min-width: 160px;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  background: rgba(74, 144, 226, 0.1);
+  border-color: rgba(74, 144, 226, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(74, 144, 226, 0.2);
+}
+
+.feature-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.feature-text {
+  font-size: 14px;
+  color: #e8e8e8;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Scrollbar styling */
+.main-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: rgba(15, 52, 96, 0.3);
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(74, 144, 226, 0.4);
+  border-radius: 5px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 144, 226, 0.6);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .welcome-title {
+    font-size: 36px;
+  }
+
+  .welcome-subtitle {
+    font-size: 18px;
+  }
+
+  .welcome-description {
+    font-size: 14px;
+  }
+
+  .welcome-features {
+    gap: 16px;
+  }
+
+  .feature-item {
+    min-width: 120px;
+    padding: 16px;
+  }
 }

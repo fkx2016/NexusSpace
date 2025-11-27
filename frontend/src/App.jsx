@@ -1,59 +1,97 @@
 import { useState } from 'react';
 import AnalysisSidebar from './components/AnalysisSidebar';
-import ChatInterface from './components/ChatInterface';
+import AnalysisProgress from './components/AnalysisProgress';
+import AnalysisResults from './components/AnalysisResults';
 import { api } from './api';
 import './App.css';
 
 function App() {
   // Analysis state
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [fileMetadata, setFileMetadata] = useState(null);
   const [analysisError, setAnalysisError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAnalyzeProject = async () => {
-    setIsLoading(true);
+  const handleAnalyzeClick = async () => {
+    setIsAnalyzing(true);
     setAnalysisError(null);
     setAnalysisResult(null);
-    setFileMetadata(null);
 
     try {
-      // Call the new analyze-project endpoint
+      // Call the analyze-project endpoint
       // Hardcoded to analyze current directory for Phase 1
-      const result = await api.analyzeProject(".", null);
+      const result = await api.analyzeProject(".");
 
       // Store the results
-      setAnalysisResult({
-        stage1: result.stage1,
-        stage2: result.stage2,
-        stage3: result.stage3,
-        metadata: result.metadata,
-      });
-
-      // Store file metadata separately for easy access
-      if (result.metadata && result.metadata.file_analysis) {
-        setFileMetadata(result.metadata.file_analysis);
-      }
+      setAnalysisResult(result);
     } catch (error) {
       console.error('Failed to analyze project:', error);
       setAnalysisError(error.message);
     } finally {
-      setIsLoading(false);
+      setIsAnalyzing(false);
     }
   };
+
+  // Extract file metadata for sidebar if available
+  const fileMetadata = analysisResult?.metadata?.file_analysis || null;
 
   return (
     <div className="app">
       <AnalysisSidebar
-        onAnalyzeProject={handleAnalyzeProject}
-        isLoading={isLoading}
+        onAnalyzeProject={handleAnalyzeClick}
+        isLoading={isAnalyzing}
         fileMetadata={fileMetadata}
       />
-      <ChatInterface
-        analysisResult={analysisResult}
-        analysisError={analysisError}
-        isLoading={isLoading}
-      />
+
+      <main className="main-content">
+        {isAnalyzing && <AnalysisProgress />}
+
+        {!isAnalyzing && analysisError && (
+          <div className="error-container">
+            <div className="error-icon">⚠️</div>
+            <h2 className="error-title">Analysis Failed</h2>
+            <p className="error-message">{analysisError}</p>
+            <button className="retry-button" onClick={handleAnalyzeClick}>
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {!isAnalyzing && !analysisError && analysisResult && (
+          <AnalysisResults
+            stage1={analysisResult.stage1}
+            stage2={analysisResult.stage2}
+            stage3={analysisResult.stage3}
+            metadata={analysisResult.metadata}
+          />
+        )}
+
+        {!isAnalyzing && !analysisError && !analysisResult && (
+          <div className="welcome-container">
+            <div className="welcome-icon">🚀</div>
+            <h1 className="welcome-title">Welcome to NexusSpace</h1>
+            <p className="welcome-subtitle">Code Analysis Dashboard</p>
+            <p className="welcome-description">
+              Click the <strong>"Analyze Project"</strong> button in the sidebar to begin
+              analyzing your codebase. NexusSpace will read your project files,
+              rank them by importance, and generate a comprehensive analysis report.
+            </p>
+            <div className="welcome-features">
+              <div className="feature-item">
+                <span className="feature-icon">📁</span>
+                <span className="feature-text">Automatic file discovery</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-icon">📊</span>
+                <span className="feature-text">Intelligent ranking</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-icon">📄</span>
+                <span className="feature-text">Detailed reports</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
