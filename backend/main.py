@@ -89,7 +89,7 @@ async def get_conversation(conversation_id: str):
 @app.post("/api/conversations/{conversation_id}/message")
 async def send_message(conversation_id: str, request: SendMessageRequest):
     """
-    Send a message and run the 3-stage council process.
+    Send a message and run the 2-stage council process.
     Returns the complete response with all stages.
     """
     # Check if conversation exists
@@ -108,8 +108,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         title = await generate_conversation_title(request.content)
         storage.update_conversation_title(conversation_id, title)
 
-    # Run the 3-stage council process
-    stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
+    # Run the 2-stage council process
+    stage1_results, stage3_result, metadata = await run_full_council(
         request.content
     )
 
@@ -117,14 +117,14 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
     storage.add_assistant_message(
         conversation_id,
         stage1_results,
-        stage2_results,
+        [],  # Stage 2 skipped
         stage3_result
     )
 
     # Return the complete response with metadata
     return {
         "stage1": stage1_results,
-        "stage2": stage2_results,
+        "stage2": [],  # Stage 2 skipped for performance
         "stage3": stage3_result,
         "metadata": metadata
     }
@@ -133,7 +133,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
 @app.post("/api/conversations/{conversation_id}/message/stream")
 async def send_message_stream(conversation_id: str, request: SendMessageRequest):
     """
-    Send a message and stream the 3-stage council process.
+    Send a message and stream the 2-stage council process.
     Returns Server-Sent Events as each stage completes.
     """
     # Check if conversation exists
@@ -159,15 +159,12 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             stage1_results = await stage1_collect_responses(request.content)
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
 
-            # Stage 2: Collect rankings
-            yield f"data: {json.dumps({'type': 'stage2_start'})}\n\n"
-            stage2_results, label_to_model = await stage2_collect_rankings(request.content, stage1_results)
-            aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
-            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings}})}\n\n"
+            # Stage 2: Skipped for performance
+            yield f"data: {json.dumps({'type': 'stage2_skipped'})}\n\n"
 
             # Stage 3: Synthesize final answer
             yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
-            stage3_result = await stage3_synthesize_final(request.content, stage1_results, stage2_results)
+            stage3_result = await stage3_synthesize_final(request.content, stage1_results)
             yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
 
             # Wait for title generation if it was started
@@ -180,7 +177,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             storage.add_assistant_message(
                 conversation_id,
                 stage1_results,
-                stage2_results,
+                [],  # Stage 2 skipped
                 stage3_result
             )
 
@@ -254,7 +251,7 @@ HERE IS THE LOCAL CODEBASE CONTEXT:
     
     # Run the council analysis
     try:
-        stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
+        stage1_results, stage3_result, metadata = await run_full_council(
             final_prompt
         )
     except Exception as e:
@@ -266,7 +263,7 @@ HERE IS THE LOCAL CODEBASE CONTEXT:
     # Return the complete response with file reading metadata
     return {
         "stage1": stage1_results,
-        "stage2": stage2_results,
+        "stage2": [],  # Stage 2 skipped for performance
         "stage3": stage3_result,
         "metadata": {
             **metadata,

@@ -19,10 +19,10 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 # DEVELOPMENT MODELS (Low cost for testing)
 COUNCIL_MODELS = [
     "anthropic/claude-3-haiku",
-    "google/gemini-1.5-flash-latest",
+    "google/gemini-2.5-flash",
     "meta-llama/llama-3-70b-instruct",
 ]
-CHAIRMAN_MODEL = "anthropic/claude-3-haiku"
+CHAIRMAN_MODEL = "google/gemini-2.5-flash"
 
 # OpenRouter API endpoint
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"

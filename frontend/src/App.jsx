@@ -18,7 +18,6 @@ function App() {
 
     try {
       // Call the analyze-project endpoint
-      // Hardcoded to analyze current directory for Phase 1
       const result = await api.analyzeProject(".");
 
       // Store the results

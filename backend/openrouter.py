@@ -38,6 +38,24 @@ async def query_model(
                 headers=headers,
                 json=payload
             )
+            
+            # Check for HTTP errors and extract detailed error information
+            if response.status_code != 200:
+                try:
+                    error_data = response.json()
+                    error_details = error_data.get('error', {})
+                    error_message = error_details.get('message', 'Unknown API Error')
+                    error_code = error_details.get('code', 'UNKNOWN')
+                except:
+                    error_message = response.text or 'Unknown API Error'
+                    error_code = 'PARSE_ERROR'
+                
+                error_msg = f"API Error {response.status_code} ({error_code}): {error_message}"
+                print(f"Error querying model {model}: {error_msg}")
+                print(f"Full response: {response.text[:500]}")  # Log first 500 chars
+                return None
+            
+            # Raise for other HTTP errors
             response.raise_for_status()
 
             data = response.json()
@@ -48,8 +66,14 @@ async def query_model(
                 'reasoning_details': message.get('reasoning_details')
             }
 
+    except httpx.TimeoutException as e:
+        print(f"Timeout querying model {model} after {timeout}s: {e}")
+        return None
+    except httpx.HTTPStatusError as e:
+        print(f"HTTP error querying model {model}: {e.response.status_code} - {e.response.text[:200]}")
+        return None
     except Exception as e:
-        print(f"Error querying model {model}: {e}")
+        print(f"Unexpected error querying model {model}: {type(e).__name__} - {e}")
         return None
 
 

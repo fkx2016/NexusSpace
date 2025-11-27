@@ -114,16 +114,14 @@ Now provide your evaluation and ranking:"""
 
 async def stage3_synthesize_final(
     user_query: str,
-    stage1_results: List[Dict[str, Any]],
-    stage2_results: List[Dict[str, Any]]
+    stage1_results: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
     """
     Stage 3: Chairman synthesizes final response.
 
     Args:
-        user_query: The original user query
+        user_query: The original user query (not used in prompt)
         stage1_results: Individual model responses from Stage 1
-        stage2_results: Rankings from Stage 2
 
     Returns:
         Dict with 'model' and 'response' keys
@@ -134,27 +132,17 @@ async def stage3_synthesize_final(
         for result in stage1_results
     ])
 
-    stage2_text = "\n\n".join([
-        f"Model: {result['model']}\nRanking: {result['ranking']}"
-        for result in stage2_results
-    ])
-
-    chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
-
-Original Question: {user_query}
+    chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have analyzed a codebase and provided their individual responses.
 
 STAGE 1 - Individual Responses:
 {stage1_text}
 
-STAGE 2 - Peer Rankings:
-{stage2_text}
-
-Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate answer to the user's original question. Consider:
+Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate analysis. Consider:
 - The individual responses and their insights
-- The peer rankings and what they reveal about response quality
 - Any patterns of agreement or disagreement
+- Any external reports or context provided below
 
-Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
+Provide a clear, well-reasoned final synthesis that represents the council's collective wisdom:"""
 
     messages = [{"role": "user", "content": chairman_prompt}]
 
@@ -293,43 +281,36 @@ Title:"""
     return title
 
 
-async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
+async def run_full_council(user_query: str) -> Tuple[List, Dict, Dict]:
     """
-    Run the complete 3-stage council process.
+    Run the simplified 2-stage council process (Stage 1 and Stage 3 only).
 
     Args:
         user_query: The user's question
 
     Returns:
-        Tuple of (stage1_results, stage2_results, stage3_result, metadata)
+        Tuple of (stage1_results, stage3_result, metadata)
     """
     # Stage 1: Collect individual responses
     stage1_results = await stage1_collect_responses(user_query)
 
     # If no models responded successfully, return error
     if not stage1_results:
-        return [], [], {
+        return [], {
             "model": "error",
             "response": "All models failed to respond. Please try again."
         }, {}
 
-    # Stage 2: Collect rankings
-    stage2_results, label_to_model = await stage2_collect_rankings(user_query, stage1_results)
-
-    # Calculate aggregate rankings
-    aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
-
-    # Stage 3: Synthesize final answer
+    # Stage 3: Synthesize final answer (skipping Stage 2)
     stage3_result = await stage3_synthesize_final(
         user_query,
-        stage1_results,
-        stage2_results
+        stage1_results
     )
 
     # Prepare metadata
     metadata = {
-        "label_to_model": label_to_model,
-        "aggregate_rankings": aggregate_rankings
+        "stages_executed": ["stage1", "stage3"],
+        "stage2_skipped": True
     }
 
-    return stage1_results, stage2_results, stage3_result, metadata
+    return stage1_results, stage3_result, metadata
