@@ -4,13 +4,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import uuid
 import json
 import asyncio
 
 from . import storage
 from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
+from .services.file_reader import get_project_context, FileReaderResult
 
 app = FastAPI(title="LLM Council API")
 
@@ -32,6 +33,12 @@ class CreateConversationRequest(BaseModel):
 class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
+
+
+class ProjectAnalysisRequest(BaseModel):
+    """Request to analyze a local project codebase."""
+    project_path: str
+    analysis_prompt: Optional[str] = None
 
 
 class ConversationMetadata(BaseModel):
@@ -192,6 +199,80 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             "Connection": "keep-alive",
         }
     )
+
+
+@app.post("/api/analyze-project")
+async def analyze_project(request: ProjectAnalysisRequest):
+    """
+    Analyze a local project codebase using the LLM Council.
+    
+    This endpoint reads files from the specified project directory,
+    respects .gitignore patterns, and sends the codebase to the council for analysis.
+    
+    Args:
+        request: ProjectAnalysisRequest with project_path and optional analysis_prompt
+        
+    Returns:
+        Complete council response with all 3 stages and metadata
+    """
+    # Validate and read the project
+    try:
+        content, result = get_project_context(request.project_path)
+    except ValueError as e:
+        # Invalid path or not a directory
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Other errors during file reading
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error reading project files: {str(e)}"
+        )
+    
+    # Check if any files were read
+    if result.files_read == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No files found to analyze. The directory may be empty or all files are ignored."
+        )
+    
+    # Construct the analysis prompt
+    if request.analysis_prompt:
+        intro = request.analysis_prompt
+    else:
+        intro = """Analyze this codebase and provide insights on:
+1. Overall architecture and design patterns
+2. Code quality and best practices
+3. Potential improvements or issues
+4. Key components and their relationships"""
+    
+    final_prompt = f"""{intro}
+
+HERE IS THE LOCAL CODEBASE CONTEXT:
+===================================
+
+{content}"""
+    
+    # Run the council analysis
+    try:
+        stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
+            final_prompt
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error during council analysis: {str(e)}"
+        )
+    
+    # Return the complete response with file reading metadata
+    return {
+        "stage1": stage1_results,
+        "stage2": stage2_results,
+        "stage3": stage3_result,
+        "metadata": {
+            **metadata,
+            "file_analysis": result.to_dict()
+        }
+    }
 
 
 if __name__ == "__main__":

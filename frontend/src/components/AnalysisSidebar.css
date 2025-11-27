@@ -1,0 +1,189 @@
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border-right: 1px solid #0f3460;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    color: #e8e8e8;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid #0f3460;
+    background: rgba(15, 52, 96, 0.3);
+}
+
+.sidebar-header h1 {
+    font-size: 24px;
+    margin: 0 0 6px 0;
+    color: #4a90e2;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #a0a0a0;
+    margin: 0 0 16px 0;
+    font-weight: 400;
+}
+
+.new-conversation-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.new-conversation-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.new-conversation-btn:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+.new-conversation-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #357abd 0%, #2868a8 100%);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+    transform: translateY(-2px);
+}
+
+.new-conversation-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+.new-conversation-btn:disabled {
+    background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+.project-info {
+    padding: 20px;
+    border-top: 1px solid #0f3460;
+    margin-top: auto;
+    background: rgba(15, 52, 96, 0.2);
+}
+
+.project-info h3 {
+    font-size: 15px;
+    margin: 0 0 16px 0;
+    color: #4a90e2;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(15, 52, 96, 0.5);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #a0a0a0;
+    font-weight: 400;
+}
+
+.info-value {
+    color: #e8e8e8;
+    font-weight: 600;
+    background: rgba(74, 144, 226, 0.1);
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.conversation-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.no-conversations {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.conversation-item {
+    padding: 14px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+}
+
+.conversation-item:hover {
+    background: rgba(74, 144, 226, 0.1);
+    border-color: rgba(74, 144, 226, 0.3);
+    transform: translateX(4px);
+}
+
+.conversation-item.active {
+    background: rgba(74, 144, 226, 0.2);
+    border-color: #4a90e2;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+}
+
+.conversation-title {
+    color: #e8e8e8;
+    font-size: 14px;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.conversation-meta {
+    color: #808080;
+    font-size: 12px;
+}
+
+/* Scrollbar styling */
+.conversation-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.conversation-list::-webkit-scrollbar-track {
+    background: rgba(15, 52, 96, 0.3);
+    border-radius: 3px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb {
+    background: rgba(74, 144, 226, 0.4);
+    border-radius: 3px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(74, 144, 226, 0.6);
+}
