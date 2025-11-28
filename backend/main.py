@@ -23,7 +23,7 @@ app = FastAPI(title="LLM Council API")
 # Enable CORS (origins configured via environment variables)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=CORS_ORIGINS, # RESTORED: Use the configuration variable
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -310,4 +310,6 @@ HERE IS THE LOCAL CODEBASE CONTEXT:
 
 if __name__ == "__main__":
     import uvicorn
+    # This ensures the port and host defined in config.py (read from .env) 
+    # are used as the default instead of Uvicorn's internal defaults.
     uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)

@@ -66,10 +66,15 @@ CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
 
 **Option 2: Run manually**
 
-Terminal 1 (Backend):
+### Starting the NexusSpace Backend
+
+To ensure the application loads the correct environment variables for the host and port (e.g., 8001) and adheres to the 12-Factor App design, use the Python module entry point:
+
 ```bash
-uv run python -m backend.main
+# Recommended: Loads configuration and uses the configured port (e.g., 8001)
+python backend/main.py
 ```
+Note: Avoid using the generic `uvicorn backend.main:app` command, as it defaults to port 8000 and will cause communication errors with the frontend.
 
 Terminal 2 (Frontend):
 ```bash

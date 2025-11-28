@@ -199,14 +199,14 @@ def get_project_context(
         # Filter out ignored directories (modifies dirs in-place to prevent traversal)
         dirs[:] = [
             d for d in dirs
-            if not gitignore_spec.match_file(str(rel_dir / d) + '/')
+            if not gitignore_spec.match_file((rel_dir / d).as_posix() + '/')
         ]
         
         # Process files
         for filename in sorted(files):
             file_path = current_path / filename
             rel_path = file_path.relative_to(root)
-            rel_path_str = str(rel_path).replace('\\', '/')
+            rel_path_str = rel_path.as_posix()
             
             # Check if file is ignored
             if gitignore_spec.match_file(rel_path_str):
@@ -302,7 +302,7 @@ def get_project_summary(root_path: str) -> Dict:
         # Filter ignored directories
         dirs[:] = [
             d for d in dirs
-            if not gitignore_spec.match_file(str(rel_dir / d) + '/')
+            if not gitignore_spec.match_file((rel_dir / d).as_posix() + '/')
         ]
         
         total_dirs += len(dirs)
@@ -310,7 +310,7 @@ def get_project_summary(root_path: str) -> Dict:
         for filename in files:
             file_path = current_path / filename
             rel_path = file_path.relative_to(root)
-            rel_path_str = str(rel_path).replace('\\', '/')
+            rel_path_str = rel_path.as_posix()
             
             if gitignore_spec.match_file(rel_path_str):
                 continue
