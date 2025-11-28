@@ -117,7 +117,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         storage.update_conversation_title(conversation_id, title)
 
     # Run the 2-stage council process
-    stage1_results, stage3_result, metadata = await run_full_council(
+    stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
         request.content
     )
 
@@ -125,14 +125,14 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
     storage.add_assistant_message(
         conversation_id,
         stage1_results,
-        [],  # Stage 2 skipped
+        stage2_results,
         stage3_result
     )
 
     # Return the complete response with metadata
     return {
         "stage1": stage1_results,
-        "stage2": [],  # Stage 2 skipped for performance
+        "stage2": stage2_results,
         "stage3": stage3_result,
         "metadata": metadata
     }
@@ -284,7 +284,7 @@ HERE IS THE LOCAL CODEBASE CONTEXT:
         
         # Run the council analysis
         try:
-            stage1_results, stage3_result, metadata = await run_full_council(
+            stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
                 final_prompt,
                 project_path=str(path_to_analyze)
             )
@@ -297,7 +297,7 @@ HERE IS THE LOCAL CODEBASE CONTEXT:
         # Return the complete response with file reading metadata
         return {
             "stage1": stage1_results,
-            "stage2": [],  # Stage 2 skipped for performance
+            "stage2": stage2_results,
             "stage3": stage3_result,
             "metadata": {
                 **metadata,

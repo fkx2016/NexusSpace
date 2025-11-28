@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Any, Tuple
 from .llm_client import query_models_parallel, query_model
-from .config import COUNCIL_MODELS, CHAIRMAN_MODEL, TITLE_GENERATION_TIMEOUT
+from .config import COUNCIL_MODELS, CHAIRMAN_MODEL, TITLE_GENERATION_TIMEOUT, RUN_STAGE_2
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
@@ -132,17 +132,28 @@ async def stage3_synthesize_final(
         for result in stage1_results
     ])
 
-    chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have analyzed a codebase and provided their individual responses.
+    chairman_prompt = f"""You are the Chairman of an LLM Council. Your goal is to synthesize all available evidence into a single, comprehensive, accurate, and professionally formatted report.
+
+--- FORMATTING INSTRUCTIONS ---
+Your response MUST be formatted using Markdown headings (##) and lists. Include sections for:
+1. Overall Architecture and Design Patterns.
+2. Key Strengths and Weaknesses (Code Quality).
+3. Final Recommendations for Improvement.
+
+--- EVIDENCE ---
+[This section contains all the raw evidence you must synthesize.]
 
 STAGE 1 - Individual Responses:
 {stage1_text}
 
-Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate analysis. Consider:
-- The individual responses and their insights
-- Any patterns of agreement or disagreement
-- Any external reports or context provided below
+(Add any other supporting evidence here, if applicable)
 
-Provide a clear, well-reasoned final synthesis that represents the council's collective wisdom:"""
+--- END EVIDENCE ---
+
+Based ONLY on the evidence provided above, generate the Final Synthesis Report. Do NOT repeat the evidence or the prompt instructions.
+
+[FINAL_SYNTHESIS_START]
+"""
 
     messages = [{"role": "user", "content": chairman_prompt}]
 
@@ -156,9 +167,24 @@ Provide a clear, well-reasoned final synthesis that represents the council's col
             "response": "Error: Unable to generate final synthesis."
         }
 
+    full_text = response.get('content', '')
+
+    # --- Context Stripping Logic (The Fix) ---
+
+    # We use the unique marker to find where the actual conclusion starts.
+    marker = "[FINAL_SYNTHESIS_START]"
+
+    if marker in full_text:
+        # Surgically return only the text that follows the marker
+        start_index = full_text.find(marker) + len(marker)
+        clean_response = full_text[start_index:].strip()
+    else:
+        # Fallback: We rely on the marker for a clean cut.
+        clean_response = full_text 
+
     return {
         "model": CHAIRMAN_MODEL,
-        "response": response.get('content', '')
+        "response": clean_response # <-- Return the stripped, clean text
     }
 
 
@@ -281,7 +307,7 @@ Title:"""
     return title
 
 
-async def run_full_council(user_query: str, project_path: str = None) -> Tuple[List, Dict, Dict]:
+async def run_full_council(user_query: str, project_path: str = None) -> Tuple[List, List, Dict, Dict]:
     """
     Run the simplified 2-stage council process (Stage 1 and Stage 3 only).
 
@@ -290,19 +316,35 @@ async def run_full_council(user_query: str, project_path: str = None) -> Tuple[L
         project_path: Optional path to the project being analyzed
 
     Returns:
-        Tuple of (stage1_results, stage3_result, metadata)
+        Tuple of (stage1_results, stage2_results, stage3_result, metadata)
     """
     # Stage 1: Collect individual responses
     stage1_results = await stage1_collect_responses(user_query)
 
     # If no models responded successfully, return error
     if not stage1_results:
-        return [], {
+        return [], [], {
             "model": "error",
             "response": "All models failed to respond. Please try again."
         }, {}
 
-    # Stage 3: Synthesize final answer (skipping Stage 2)
+    # Stage 2: Peer Ranking (Now Conditional)
+    if RUN_STAGE_2:
+        stage2_results, label_to_model = await stage2_collect_rankings(
+            user_query,
+            stage1_results
+        )
+        # Update metadata to reflect Stage 2 ran
+        stages_executed = ["stage1", "stage2", "stage3"]
+        stage2_skipped = False
+    else:
+        # Stage 2 is skipped based on configuration
+        stage2_results = []
+        label_to_model = {}
+        stages_executed = ["stage1", "stage3"]
+        stage2_skipped = True
+
+    # Stage 3: Synthesize final answer
     stage3_result = await stage3_synthesize_final(
         user_query,
         stage1_results
@@ -310,8 +352,8 @@ async def run_full_council(user_query: str, project_path: str = None) -> Tuple[L
 
     # Prepare metadata
     metadata = {
-        "stages_executed": ["stage1", "stage3"],
-        "stage2_skipped": True
+        "stages_executed": stages_executed,
+        "stage2_skipped": stage2_skipped
     }
 
-    return stage1_results, stage3_result, metadata
+    return stage1_results, stage2_results, stage3_result, metadata

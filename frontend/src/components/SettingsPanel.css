@@ -1,76 +1,108 @@
 .settings-panel {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    font-family: 'Inter', sans-serif;
+    max-width: 800px;
+    margin: 20px auto 0 auto;
+    /* Top margin match, no bottom margin to stack closely */
+    padding: 16px 24px;
+    background: rgba(22, 33, 62, 0.8);
+    border: 1px solid rgba(74, 144, 226, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    color: #e8e8e8;
 }
 
 .settings-panel h2 {
     margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-    color: #343a40;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    color: #4a90e2;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(74, 144, 226, 0.2);
+    padding-bottom: 8px;
 }
 
 .setting-row {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+}
+
+.setting-row:last-child {
+    margin-bottom: 0;
 }
 
 .setting-row label {
     font-weight: 500;
-    color: #495057;
+    color: #a0a0a0;
+    min-width: 120px;
 }
 
 .setting-row select {
     padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #ced4da;
-    font-size: 1rem;
+    background: rgba(10, 10, 15, 0.6);
+    border: 1px solid rgba(74, 144, 226, 0.3);
+    border-radius: 6px;
+    color: #e8e8e8;
+    font-size: 0.95rem;
     flex-grow: 1;
-    max-width: 400px;
-}
-
-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
     cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
 }
 
-button:hover {
-    background-color: #0056b3;
+.setting-row select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    background: rgba(10, 10, 15, 0.8);
 }
 
-button:disabled {
-    background-color: #6c757d;
+.setting-row select:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
 .status-message {
-    margin-top: 10px;
+    margin-top: 8px;
+    font-size: 0.9rem;
     font-weight: 500;
 }
 
 .status-message.success {
-    color: #28a745;
+    color: #2ecc71;
 }
 
 .status-message.error {
-    color: #dc3545;
+    color: #e74c3c;
 }
 
 .note {
-    margin-top: 15px;
-    font-size: 0.85rem;
-    color: #6c757d;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #808080;
     font-style: italic;
+}
+
+/* Button Styling */
+.settings-save-button {
+    background-color: #4a90e2;
+    /* Light Blue */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 10px;
+}
+
+.settings-save-button:hover {
+    background-color: #357abd;
+}
+
+.settings-save-button:disabled {
+    background-color: #5d6673;
+    /* Darker gray when disabled */
+    cursor: not-allowed;
+    opacity: 0.7;
 }

@@ -101,6 +101,9 @@ try:
         "google/gemini-2.5-flash"
     )
 
+    # Feature Flags
+    RUN_STAGE_2 = os.getenv("RUN_STAGE_2", "true").lower() == "true"
+
     # Storage Configuration
     STORAGE_BACKEND = get_optional_env("STORAGE_BACKEND", "filesystem")
     DATA_DIR = get_optional_env("DATA_DIR", "data/conversations")

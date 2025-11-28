@@ -69,7 +69,11 @@ const SettingsPanel = () => {
                     ))}
                 </select>
             </div>
-            <button onClick={handleSave} disabled={loading || status.includes('Saving')}>
+            <button
+                onClick={handleSave}
+                disabled={loading || status.includes('Saving')}
+                className="primary-button settings-save-button"
+            >
                 Save Provider Setting
             </button>
             {status && <p className={`status-message ${status.includes('Error') ? 'error' : 'success'}`}>{status}</p>}

@@ -14,6 +14,14 @@ function App() {
   const [projectPath, setProjectPath] = useState('.'); // New state for path
   const [analysisPrompt, setAnalysisPrompt] = useState(''); // New state for custom prompt
 
+  const SAMPLE_PROMPT = "Analyze the codebase focusing strictly on security vulnerabilities (improper handling of API keys, injection risks) and provide a prioritized list of refactoring suggestions.";
+
+  const useSamplePrompt = () => {
+    setAnalysisPrompt(SAMPLE_PROMPT);
+  };
+
+
+
   const handleAnalyzeClick = async () => {
     setIsAnalyzing(true);
     setAnalysisError(null);
@@ -46,10 +54,9 @@ function App() {
 
       <main className="main-content">
         <SettingsPanel />
-
         <div className="analysis-controls">
           <div className="input-group">
-            <label htmlFor="project-path">Project Path:</label>
+            <label htmlFor="project-path">Project Path or GitHub URL:</label>
             <input
               id="project-path"
               type="text"
@@ -57,17 +64,27 @@ function App() {
               value={projectPath}
               onChange={(e) => setProjectPath(e.target.value)}
             />
-            <p className="note">Defaults to '.' (this folder).</p>
+            <p className="note">Use text entry for local paths (e.g., `.` or `../project-name`).</p>
           </div>
           <div className="input-group">
             <label htmlFor="analysis-prompt">Custom Prompt (Optional):</label>
-            <textarea
-              id="analysis-prompt"
-              placeholder="Enter custom instructions for the analysis..."
-              value={analysisPrompt}
-              onChange={(e) => setAnalysisPrompt(e.target.value)}
-              rows={3}
-            />
+            <div className="prompt-controls">
+              <textarea
+                id="analysis-prompt"
+                placeholder={SAMPLE_PROMPT} // Use sample as placeholder
+                value={analysisPrompt}
+                onChange={(e) => setAnalysisPrompt(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box' }}
+                rows={3}
+              />
+              <span
+                className="use-sample-link"
+                onClick={useSamplePrompt}
+                style={{ cursor: 'pointer', color: '#4a90e2', fontSize: '0.9em', marginTop: '5px', display: 'block', textDecoration: 'underline' }}
+              >
+                Use Advanced Security Analysis Sample
+              </span>
+            </div>
           </div>
         </div>
 

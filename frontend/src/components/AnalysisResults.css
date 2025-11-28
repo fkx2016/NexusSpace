@@ -203,3 +203,52 @@
 .stage-output::-webkit-scrollbar-thumb:hover {
     background: rgba(74, 144, 226, 0.6);
 }
+
+/* Report Header Styles */
+.report-header {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.report-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.report-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.report-value {
+    color: #212529;
+    font-family: 'Consolas', 'Monaco', monospace;
+    background-color: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .report-header {
+        background-color: #2b3035;
+        border-color: #495057;
+    }
+
+    .report-label {
+        color: #adb5bd;
+    }
+
+    .report-value {
+        color: #f8f9fa;
+        background-color: #343a40;
+    }
+}

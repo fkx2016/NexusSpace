@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import FileMetadata from './FileMetadata';
 import './AnalysisResults.css';
 
@@ -10,6 +11,17 @@ export default function AnalysisResults({ stage1, stage2, stage3, metadata }) {
 
     return (
         <div className="analysis-results">
+            <div className="report-header">
+                <div className="report-meta-item">
+                    <span className="report-label">Source Path:</span>
+                    <span className="report-value">
+                        {metadata?.source_path === '.'
+                            ? 'Current Project Directory (Self-Analysis)'
+                            : (metadata?.source_path || 'Not Available')}
+                    </span>
+                </div>
+            </div>
+
             <FileMetadata metadata={fileMetadata} />
 
             <div className="results-container">
@@ -76,8 +88,8 @@ export default function AnalysisResults({ stage1, stage2, stage3, metadata }) {
                         <div className="tab-panel">
                             <h2 className="panel-title">Stage 3: Final Report</h2>
                             {stage3 ? (
-                                <div className="stage-content">
-                                    <pre className="stage-output">{JSON.stringify(stage3, null, 2)}</pre>
+                                <div className="stage-content markdown-display-container">
+                                    <ReactMarkdown>{stage3.response}</ReactMarkdown>
                                 </div>
                             ) : (
                                 <div className="empty-state">
