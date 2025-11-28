@@ -59,7 +59,13 @@ class RemoteFetcher:
         """Removes the cloned temporary directory."""
         if path.exists() and path.is_dir():
             try:
-                shutil.rmtree(path)
+                # Helper to handle read-only files (common in .git on Windows)
+                def on_rm_error(func, path, exc_info):
+                    import stat
+                    os.chmod(path, stat.S_IWRITE)
+                    func(path)
+                
+                shutil.rmtree(path, onerror=on_rm_error)
                 print(f"INFO: Cleaned up temporary directory: {path}")
             except Exception as e:
                 print(f"ERROR: Failed to remove temporary directory {path}: {e}")
