@@ -252,3 +252,34 @@
         background-color: #343a40;
     }
 }
+
+/* Markdown Display Spacing */
+.markdown-display-container h2,
+.markdown-display-container h3,
+.markdown-display-container h4 {
+    margin-top: 1.8em;
+    /* Adds vertical space equivalent to a blank line */
+    margin-bottom: 0.8em;
+    /* Consistent spacing below */
+}
+
+.markdown-display-container ol,
+.markdown-display-container ul {
+    margin-top: 1em;
+}
+
+/* Report Action Buttons */
+.action-button {
+    background-color: transparent;
+    border: 1px solid #4a90e2;
+    color: #4a90e2;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.action-button:hover {
+    background-color: rgba(74, 144, 226, 0.1);
+}

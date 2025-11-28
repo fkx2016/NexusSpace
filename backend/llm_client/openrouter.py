@@ -6,7 +6,7 @@ This file handles communication with the external OpenRouter API.
 import httpx
 import asyncio
 from typing import List, Dict, Any, Optional
-from ..config import OPENROUTER_API_KEY, OPENROUTER_API_URL, API_TIMEOUT_SECONDS
+from ..config import OPENROUTER_API_KEY, OPENROUTER_API_URL, API_TIMEOUT_SECONDS, LLM_MAX_OUTPUT_TOKENS
 from .base import LLMClientBackend
 
 # We only import the base timeout; the specific title timeout is handled by the caller (LLM Council)
@@ -36,6 +36,7 @@ class OpenRouterClient(LLMClientBackend):
         payload = {
             "model": model,
             "messages": messages,
+            "max_tokens": LLM_MAX_OUTPUT_TOKENS,
         }
 
         # Use the provided timeout, or the default from configuration

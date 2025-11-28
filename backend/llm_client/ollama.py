@@ -7,7 +7,7 @@ This file handles communication with a local or self-hosted LLM endpoint
 import httpx
 import asyncio
 from typing import List, Dict, Any, Optional
-from ..config import OLLAMA_API_URL, API_TIMEOUT_SECONDS
+from ..config import OLLAMA_API_URL, API_TIMEOUT_SECONDS, LLM_MAX_OUTPUT_TOKENS
 from .base import LLMClientBackend
 
 class OllamaClient(LLMClientBackend):
@@ -35,6 +35,7 @@ class OllamaClient(LLMClientBackend):
         payload = {
             "model": model,
             "messages": messages,
+            "max_tokens": LLM_MAX_OUTPUT_TOKENS,
         }
 
         actual_timeout = timeout if timeout is not None else API_TIMEOUT_SECONDS

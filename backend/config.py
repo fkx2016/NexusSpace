@@ -138,6 +138,9 @@ try:
     # API Timeout Configuration
     API_TIMEOUT_SECONDS = get_env_float("API_TIMEOUT_SECONDS", 120.0)
     TITLE_GENERATION_TIMEOUT = get_env_float("TITLE_GENERATION_TIMEOUT", 30.0)
+    
+    # LLM Generation Configuration
+    LLM_MAX_OUTPUT_TOKENS = get_env_int("LLM_MAX_OUTPUT_TOKENS", 4096)
 
 except ConfigurationError as e:
     print(f"\n❌ CONFIGURATION ERROR:\n{e}\n", file=sys.stderr)
@@ -184,6 +187,9 @@ def validate_config():
     if API_TIMEOUT_SECONDS <= 0:
         errors.append(f"API_TIMEOUT_SECONDS must be positive, got {API_TIMEOUT_SECONDS}")
 
+    if LLM_MAX_OUTPUT_TOKENS <= 0:
+        errors.append(f"LLM_MAX_OUTPUT_TOKENS must be positive, got {LLM_MAX_OUTPUT_TOKENS}")
+
     if errors:
         print("\n❌ CONFIGURATION VALIDATION ERRORS:\n", file=sys.stderr)
         for error in errors:
@@ -218,6 +224,7 @@ def print_config_summary():
     print(f"Max Files to Read: {MAX_FILES_TO_READ}")
     print(f"Max Codebase Size: {MAX_CODEBASE_SIZE_MB} MB")
     print(f"API Timeout: {API_TIMEOUT_SECONDS}s")
+    print(f"Max Output Tokens: {LLM_MAX_OUTPUT_TOKENS}")
     print("="*60 + "\n")
 
 

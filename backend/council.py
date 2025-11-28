@@ -138,6 +138,8 @@ async def stage3_synthesize_final(
 Your response MUST be formatted using Markdown headings (##) and lists. Include sections for:
 1. Overall Architecture and Design Patterns.
 2. Key Strengths and Weaknesses (Code Quality).
+
+
 3. Final Recommendations for Improvement.
 
 --- EVIDENCE ---

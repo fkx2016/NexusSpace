@@ -2,7 +2,8 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uuid
@@ -65,10 +66,16 @@ class Conversation(BaseModel):
     messages: List[Dict[str, Any]]
 
 
-@app.get("/")
-async def root():
+@app.get("/api/health")
+async def health_check():
     """Health check endpoint."""
     return {"status": "ok", "service": "LLM Council API"}
+
+
+@app.get("/")
+async def root():
+    """Serve the React frontend."""
+    return FileResponse("frontend/dist/index.html")
 
 
 @app.get("/api/conversations", response_model=List[ConversationMetadata])
@@ -306,6 +313,31 @@ HERE IS THE LOCAL CODEBASE CONTEXT:
                 "source_path": input_path # Return original path/URL
             }
         }
+
+
+# ============================================================================
+# STATIC FILE SERVING (Must be last)
+# ============================================================================
+
+# 1. Mount Static Files (JS/CSS/Assets built by Vite)
+# The path will be relative to the container root, where 'frontend/dist' is copied.
+# We use check_dir=False to avoid errors if the directory doesn't exist during development
+app.mount("/assets", StaticFiles(directory="frontend/dist/assets", check_dir=False), name="assets")
+
+# Optional: Serve the favicon from the root
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("frontend/dist/favicon.ico")
+
+# 2. SPA Catch-All Route (Must be the last route registered)
+# This serves index.html for all non-API and non-static routes.
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_frontend(full_path: str):
+    # If the path starts with /api, it's a 404 for the API, not a frontend request
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+        
+    return FileResponse("frontend/dist/index.html")
 
 
 if __name__ == "__main__":
