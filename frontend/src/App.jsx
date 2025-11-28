@@ -2,7 +2,8 @@ import { useState } from 'react';
 import AnalysisSidebar from './components/AnalysisSidebar';
 import AnalysisProgress from './components/AnalysisProgress';
 import AnalysisResults from './components/AnalysisResults';
-import { api } from './api';
+import SettingsPanel from './components/SettingsPanel';
+import { nexusApi as api } from './api';
 import './App.css';
 
 function App() {
@@ -10,6 +11,8 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [analysisError, setAnalysisError] = useState(null);
+  const [projectPath, setProjectPath] = useState('.'); // New state for path
+  const [analysisPrompt, setAnalysisPrompt] = useState(''); // New state for custom prompt
 
   const handleAnalyzeClick = async () => {
     setIsAnalyzing(true);
@@ -18,7 +21,7 @@ function App() {
 
     try {
       // Call the analyze-project endpoint
-      const result = await api.analyzeProject(".");
+      const result = await api.analyzeProject(projectPath, analysisPrompt || null);
 
       // Store the results
       setAnalysisResult(result);
@@ -42,6 +45,32 @@ function App() {
       />
 
       <main className="main-content">
+        <SettingsPanel />
+
+        <div className="analysis-controls">
+          <div className="input-group">
+            <label htmlFor="project-path">Project Path:</label>
+            <input
+              id="project-path"
+              type="text"
+              placeholder="Enter local path (e.g., ../other-project) or GitHub URL"
+              value={projectPath}
+              onChange={(e) => setProjectPath(e.target.value)}
+            />
+            <p className="note">Defaults to '.' (this folder).</p>
+          </div>
+          <div className="input-group">
+            <label htmlFor="analysis-prompt">Custom Prompt (Optional):</label>
+            <textarea
+              id="analysis-prompt"
+              placeholder="Enter custom instructions for the analysis..."
+              value={analysisPrompt}
+              onChange={(e) => setAnalysisPrompt(e.target.value)}
+              rows={3}
+            />
+          </div>
+        </div>
+
         {isAnalyzing && <AnalysisProgress />}
 
         {!isAnalyzing && analysisError && (

@@ -3,7 +3,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uuid
 import json
@@ -12,17 +12,25 @@ import asyncio
 from . import storage
 from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
 from .services.file_reader import get_project_context, FileReaderResult
+from .config import CORS_ORIGINS, SERVER_HOST, SERVER_PORT, LLM_PROVIDER as ENV_LLM_PROVIDER
+from .api import settings # Import settings router
+from .api.settings import _get_setting_db # Helper to get settings
+from .services.remote.fetcher import remote_fetcher # Remote fetcher service
+from contextlib import ExitStack # For robust cleanup
 
 app = FastAPI(title="LLM Council API")
 
-# Enable CORS for local development
+# Enable CORS (origins configured via environment variables)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include Settings Router
+app.include_router(settings.router, prefix="/api", tags=["Settings"])
 
 
 class CreateConversationRequest(BaseModel):
@@ -35,10 +43,10 @@ class SendMessageRequest(BaseModel):
     content: str
 
 
-class ProjectAnalysisRequest(BaseModel):
+class AnalysisRequest(BaseModel):
     """Request to analyze a local project codebase."""
-    project_path: str
-    analysis_prompt: Optional[str] = None
+    project_path: str = Field(default=".", description="The root path to the codebase to analyze.")
+    analysis_prompt: Optional[str] = Field(default=None, description="Optional custom prompt for analysis.")
 
 
 class ConversationMetadata(BaseModel):
@@ -199,79 +207,107 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
 
 @app.post("/api/analyze-project")
-async def analyze_project(request: ProjectAnalysisRequest):
+async def analyze_project(request: AnalysisRequest):
     """
-    Analyze a local project codebase using the LLM Council.
+    Analyze a project codebase using the LLM Council, using the specified path.
     
     This endpoint reads files from the specified project directory,
     respects .gitignore patterns, and sends the codebase to the council for analysis.
     
     Args:
-        request: ProjectAnalysisRequest with project_path and optional analysis_prompt
+        request: AnalysisRequest with project_path and optional analysis_prompt
         
     Returns:
         Complete council response with all 3 stages and metadata
     """
-    # Validate and read the project
-    try:
-        content, result = get_project_context(request.project_path)
-    except ValueError as e:
-        # Invalid path or not a directory
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        # Other errors during file reading
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error reading project files: {str(e)}"
-        )
-    
-    # Check if any files were read
-    if result.files_read == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="No files found to analyze. The directory may be empty or all files are ignored."
-        )
-    
-    # Construct the analysis prompt
-    if request.analysis_prompt:
-        intro = request.analysis_prompt
-    else:
-        intro = """Analyze this codebase and provide insights on:
+    # 1. Fetch current LLM Provider setting (Task 18 logic)
+    current_provider = _get_setting_db("llm_provider") or ENV_LLM_PROVIDER
+    print(f"INFO: Starting analysis with LLM Provider: {current_provider}")
+
+    input_path = request.project_path
+    is_remote_url = input_path.startswith(('http://', 'https://', 'git@'))
+
+    # Use ExitStack for reliable cleanup
+    with ExitStack() as stack:
+        if is_remote_url:
+            print(f"INFO: Detected remote URL. Initiating clone for: {input_path}")
+            
+            # Clone the repo using the fetcher service
+            local_path = remote_fetcher.clone_repo(input_path)
+            
+            if local_path is None:
+                raise HTTPException(status_code=400, detail=f"Failed to clone repository from URL: {input_path}")
+            
+            # Register cleanup callback
+            stack.callback(remote_fetcher.cleanup, local_path)
+            
+            path_to_analyze = local_path
+        else:
+            path_to_analyze = input_path
+
+        # Validate and read the project
+        try:
+            content, result = get_project_context(str(path_to_analyze))
+        except ValueError as e:
+            # Invalid path or not a directory
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            # Other errors during file reading
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error reading project files: {str(e)}"
+            )
+        
+        # Check if any files were read
+        if result.files_read == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="No files found to analyze. The directory may be empty or all files are ignored."
+            )
+        
+        # Construct the analysis prompt
+        if request.analysis_prompt:
+            intro = request.analysis_prompt
+        else:
+            intro = """Analyze this codebase and provide insights on:
 1. Overall architecture and design patterns
 2. Code quality and best practices
 3. Potential improvements or issues
 4. Key components and their relationships"""
-    
-    final_prompt = f"""{intro}
+        
+        final_prompt = f"""{intro}
 
 HERE IS THE LOCAL CODEBASE CONTEXT:
 ===================================
 
 {content}"""
-    
-    # Run the council analysis
-    try:
-        stage1_results, stage3_result, metadata = await run_full_council(
-            final_prompt
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error during council analysis: {str(e)}"
-        )
-    
-    # Return the complete response with file reading metadata
-    return {
-        "stage1": stage1_results,
-        "stage2": [],  # Stage 2 skipped for performance
-        "stage3": stage3_result,
-        "metadata": {
-            **metadata,
-            "file_analysis": result.to_dict()
+        
+        # Run the council analysis
+        try:
+            stage1_results, stage3_result, metadata = await run_full_council(
+                final_prompt,
+                project_path=str(path_to_analyze)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error during council analysis: {str(e)}"
+            )
+        
+        # Return the complete response with file reading metadata
+        return {
+            "stage1": stage1_results,
+            "stage2": [],  # Stage 2 skipped for performance
+            "stage3": stage3_result,
+            "metadata": {
+                **metadata,
+                "file_analysis": result.to_dict(),
+                "llm_provider": current_provider,
+                "source_path": input_path # Return original path/URL
+            }
         }
-    }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)

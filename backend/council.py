@@ -1,8 +1,8 @@
 """3-stage LLM Council orchestration."""
 
 from typing import List, Dict, Any, Tuple
-from .openrouter import query_models_parallel, query_model
-from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from .llm_client import query_models_parallel, query_model
+from .config import COUNCIL_MODELS, CHAIRMAN_MODEL, TITLE_GENERATION_TIMEOUT
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
@@ -262,8 +262,8 @@ Title:"""
 
     messages = [{"role": "user", "content": title_prompt}]
 
-    # Use gemini-2.5-flash for title generation (fast and cheap)
-    response = await query_model("google/gemini-2.5-flash", messages, timeout=30.0)
+    # Use CHAIRMAN_MODEL for title generation (fast and cheap)
+    response = await query_model(CHAIRMAN_MODEL, messages, timeout=TITLE_GENERATION_TIMEOUT)
 
     if response is None:
         # Fallback to a generic title
@@ -281,12 +281,13 @@ Title:"""
     return title
 
 
-async def run_full_council(user_query: str) -> Tuple[List, Dict, Dict]:
+async def run_full_council(user_query: str, project_path: str = None) -> Tuple[List, Dict, Dict]:
     """
     Run the simplified 2-stage council process (Stage 1 and Stage 3 only).
 
     Args:
         user_query: The user's question
+        project_path: Optional path to the project being analyzed
 
     Returns:
         Tuple of (stage1_results, stage3_result, metadata)
